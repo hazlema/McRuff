@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121c21"><meta name="description" content="Four paws. One badge. Zero backup. Play McRuff, a retro first-person crime-fighting biter.">
+<title>McRuff — Bite the Crime</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23121c21'/%3E%3Cpath d='M12 9l16 12h8L52 9l-4 33-16 14-16-14z' fill='%23be925e'/%3E%3Cpath d='M23 35h18l-9 12z' fill='%23121c21'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <section id="title-screen" class="screen title-screen" aria-label="Main menu">
+    <div class="cover-art"></div><div class="cover-shade"></div><div class="grain"></div>
+    <header class="masthead"><a class="precinct-mark" href="#" aria-label="McRuff home"><span class="badge-symbol">✦</span><span>NEW BARK CITY<br><b>K-9 DIVISION</b></span></a><span class="edition">A FIRST-PERSON BITER <span class="edition-dot"></span> EST. 1993</span><button class="icon-button audio-toggle" aria-label="Mute audio" title="Toggle sound">SOUND <span>ON</span></button></header>
+    <div class="title-content">
+      <div class="case-label"><span class="live-dot"></span> CASE FILE #001 <i>/</i> BAD DOG. GOOD COP.</div>
+      <h1 aria-label="McRuff"><span class="mc">Mc</span>RUFF<span class="title-period">.</span></h1>
+      <div class="title-subline"><span>THE CRIME-FIGHTING DOG</span><span class="small-star">✦</span></div>
+      <p class="tagline">Four paws. One badge.<br>Zero backup.</p>
+      <p class="intro">The city’s gone to the dogs.<br>Fortunately, you’re the right one.</p>
+      <button id="start-button" class="start-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16l15-8z" fill="currentColor"/></svg><span>HIT THE STREETS</span><kbd>ENTER</kbd></button>
+      <div class="menu-links"><button id="controls-button">How to bite</button><span>/</span><button id="settings-button">Options</button><span>/</span><span id="best-score">NO CASE TOO RUFF.</span></div>
+    </div>
+    <div class="dog-caption"><span class="caption-line"></span><div>OFFICER BUSTER McRUFF<br><b>Good boy. Bad attitude.</b></div></div>
+    <footer class="title-footer"><span><i class="status-light"></i> PRECINCT STATUS: <b>OFF THE LEASH</b></span><span>3 DISTRICTS <i>·</i> ALL BITE <i>·</i> NO AMMO</span><button id="fullscreen-title" aria-label="Toggle fullscreen">↗ FULLSCREEN</button></footer>
+  </section>
+  <section id="game-screen" class="screen game-screen hidden" aria-label="Game">
+    <canvas id="world" aria-label="First-person view of New Bark City. Use W/S to move, A/D to turn, Q/E to strafe, Space to bite and R to bark." tabindex="0"></canvas>
+    <div class="scanlines"></div>
+    <header class="game-top"><div class="district-label"><span id="district-number">DISTRICT 01</span><h2 id="district-name">The Backstreets</h2></div><div class="objective"><span id="objective-label">CLEAN UP THE STREETS</span><b><span id="arrest-count">0</span><span class="muted"> / <span id="suspect-count">6</span></span> <small>ARRESTS</small></b></div><button id="map-button" class="pause-button" aria-label="Toggle scent map" title="Scent map (M)">⌖</button><button id="pause-button" class="pause-button" aria-label="Pause game">Ⅱ</button></header>
+    <div id="dispatch" class="dispatch"><span>K-9 RADIO</span><p id="dispatch-text"></p></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div><div id="combo" class="combo"></div>
+    <div id="map-panel" class="map-panel hidden"><div>SCENT MAP <span id="map-close-key">M TO CLOSE</span></div><canvas id="map"></canvas><p><i></i> YOU <i></i> SUSPECT <i></i> EXTRACTION</p><p class="cat-map-legend"><span>● CAT</span><span>□ DRUM / CRATE</span></p></div>
+    <button id="cat-tracker" class="cat-tracker" aria-label="Open cat collection"><span class="cat-tracker-title">CAT PATROL</span><span><b id="cat-count">0</b> CAUGHT <i> / </i><span id="cat-roaming">0 ON THE LOOSE</span></span><small id="drum-count">2 HIDING SPOTS · CAT COLLECTION ↗</small></button>
+    <div class="game-bottom">
+      <div class="hud-health"><span class="hud-label">GOOD BOY HEALTH</span><div class="health-reading"><span class="health-cross">✚</span><b id="health">100</b><small>%</small></div><div class="meter"><i id="health-meter"></i></div></div>
+      <div class="hud-armor"><span class="hud-label">VEST</span><b id="armor">0</b><small>%</small></div>
+      <div class="hud-portrait"><canvas id="portrait" width="90" height="90"></canvas><span>BUSTER</span></div>
+      <div class="hud-score"><span class="hud-label">CASE SCORE</span><b id="score">000000</b><div class="stamina-track"><span>SPRINT</span><div><i id="stamina-meter"></i></div></div></div>
+      <div class="hud-bark"><span class="hud-label">SONIC BARK</span><div><kbd id="bark-key">R</kbd><b id="bark-status">READY</b></div><div class="meter"><i id="bark-meter"></i></div></div>
+    </div>
+    <div class="control-strip"><span><kbd id="move-keys">W S</kbd> MOVE</span><span><kbd id="strafe-keys">Q E</kbd> STRAFE</span><span><kbd id="look-keys">MOUSE / A D</kbd> LOOK</span><span><kbd id="bite-key">CLICK / SPACE</kbd> BITE</span><span><kbd id="sprint-key">SHIFT</kbd> SPRINT</span><span><kbd id="map-key">M</kbd> MAP</span><span><kbd id="pause-key">ESC / P</kbd> PAUSE</span></div>
+    <div id="touch-controls"><div id="joystick" aria-label="Movement joystick"><div id="joystick-knob"></div></div><div class="touch-actions"><button id="touch-bark">BARK</button><button id="touch-bite">BITE</button></div><div class="touch-hint">DRAG RIGHT SIDE TO LOOK</div></div>
+  </section>
+  <section id="overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+    <div class="overlay-panel"><span id="overlay-kicker" class="case-label">K-9 DIVISION</span><h2 id="overlay-title">Taking a breather.</h2><p id="overlay-copy"></p><div id="overlay-content"></div><div id="overlay-actions" class="overlay-actions"></div></div>
+  </section>
+  <noscript><div class="noscript">McRuff needs JavaScript enabled to hit the streets.</div></noscript>
+</main>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

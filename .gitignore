@@ -1,0 +1,9 @@
+node_modules/
+.playwright-mcp/
+.DS_Store
+.env
+.env.*
+.agents/
+.aws/
+.codex/
+screenshots/

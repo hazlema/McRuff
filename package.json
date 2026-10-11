@@ -1,0 +1,7 @@
+{
+  "name": "mcruff-bite-the-crime",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"start": "node server.mjs", "test": "node --test --test-isolation=none tests/*.test.mjs", "check": "node --check dist/src/main.js && node --check dist/src/bindings.js && node --check dist/src/cats.js && node --check dist/src/grouch.js && node --check dist/src/world.js && node --check dist/src/renderer.js && node --check dist/src/art.js && node --check dist/src/audio.js && node --check dist/src/game.js"}
+}
