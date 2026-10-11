@@ -1,0 +1,4 @@
+[build]
+  # The game is already a complete static site; no build step is needed.
+  command = ""
+  publish = "dist"

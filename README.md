@@ -16,6 +16,8 @@ Open **http://localhost:4173** in a modern browser. Requires Node.js 22 or newer
 
 Use `PORT=8080 npm start` to choose another port. The `dist/` directory is the complete static game and can be hosted on any static web server. JavaScript modules need an HTTP server; opening `index.html` directly from the filesystem is not supported.
 
+For Netlify, the included `netlify.toml` publishes `dist/` directly with no build command.
+
 ## Controls
 
 | Action | Control |
