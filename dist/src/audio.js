@@ -45,6 +45,9 @@ export class AudioEngine {
       case 'dispatch':this.hiss(.09,.1,1600);this.tone(850,.05,'sine',.06);break;
       case 'throw':this.hiss(.16,.09,900);break;
       case 'step':this.hiss(.045,.09,150);break;
+      case 'tally':this.tone(720,.028,'square',.07,560);this.hiss(.02,.05,3000);break;
+      case 'tallyHit':this.tone(110,.3,'sawtooth',.24,38);this.hiss(.22,.45,380);break;
+      case 'tallyReady':this.tone(165,.14,'square',.1,165);this.tone(220,.22,'square',.1,220,.12);break;
       case 'click':this.tone(180,.045,'square',.1,250);break;
     }
   }

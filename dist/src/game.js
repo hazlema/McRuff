@@ -21,7 +21,13 @@ export class Game {
     this.enemies=level.enemies.map((e,i)=>({...e,hp:enemyStats[e.type].hp,maxHp:enemyStats[e.type].hp,active:false,cooldown:.6+i*.13,stun:0,hurt:0,dead:0,phase:i*1.7,attackWindup:0,attackSwing:0}));
     this.pickups=level.pickups.map(p=>({...p,collected:false}));this.props=level.props.map(p=>({...p,opened:false,shake:0,peek:0,peekProgress:0,grouchBarks:0,grouchDead:false,grouchFlop:0,grouchThrow:0,throwPose:0}));this.cats=[];this.exit=level.exit;
     this.arrests=0;this.status='playing';this.biteCooldown=0;this.biteAnimation=0;this.barkCooldown=0;this.barkWave=0;this.hurt=0;this.paperImpact=0;this.invulnerable=0;this.projectiles=[];this.particles=[];this.distanceWalked=0;this.fieldTimer=0;this.field=null;this.levelTime=0;this.exitHint=0;
+    this.levelStart={score:this.score,arrests:this.totalArrests};this.arrestPoints=0;this.timeBonus=0;
     this.events.push({type:'dispatch',text:level.briefing});
+  }
+  // End-of-district tally: arrest points, plus everything else earned here as bonus.
+  districtReport(){
+    const earned=this.score-this.levelStart.score;
+    return {time:this.levelTime,score:this.arrestPoints,bonus:earned-this.arrestPoints,timeBonus:this.timeBonus,arrestsBefore:this.levelStart.arrests,arrests:this.totalArrests,suspects:LEVELS.reduce((n,l)=>n+l.enemies.length,0),caseScore:this.score};
   }
   nextLevel(){if(this.status==='cleared'&&this.levelIndex<LEVELS.length-1)this.loadLevel(this.levelIndex+1);}
   emit(type,detail={}){this.events.push({type,...detail});}
@@ -46,7 +52,7 @@ export class Game {
       else if(!(e.attackWindup>0)&&!(e.attackSwing>0))e.stun=Math.max(e.stun,.12);
       e.active=true;this.emit('hit',{x:e.x,y:e.y});
       const a=Math.atan2(e.y-p.y,e.x-p.x),knockback=this.rules.biteInterrupt?.16:.1;moveEntity(this.map,e,Math.cos(a)*knockback,Math.sin(a)*knockback);
-      if(e.hp===0){this.arrests++;this.totalArrests++;this.combo=this.comboTimer>0?this.combo+1:1;this.comboTimer=4;this.score+=(e.type==='boss'?1000:e.type==='brute'?250:100)*Math.min(this.combo,4);p.health=Math.min(100,p.health+this.rules.arrestHeal);this.emit('arrest',{combo:this.combo,boss:e.type==='boss'});if(this.enemies.every(e=>e.hp<=0))this.emit('clear');}
+      if(e.hp===0){this.arrests++;this.totalArrests++;this.combo=this.comboTimer>0?this.combo+1:1;this.comboTimer=4;const points=(e.type==='boss'?1000:e.type==='brute'?250:100)*Math.min(this.combo,4);this.score+=points;this.arrestPoints+=points;p.health=Math.min(100,p.health+this.rules.arrestHeal);this.emit('arrest',{combo:this.combo,boss:e.type==='boss'});if(this.enemies.every(e=>e.hp<=0))this.emit('clear');}
       }
     }
     moveEntity(this.map,p,Math.cos(p.angle)*.24,Math.sin(p.angle)*.24);
@@ -133,7 +139,7 @@ export class Game {
     }
     if(this.status!=='playing')return;
     if(Math.hypot(p.x-this.exit.x,p.y-this.exit.y)<.7){
-      if(this.enemies.every(e=>e.hp<=0)){this.score+=Math.max(100,Math.floor(1200-this.levelTime*5));this.status=this.levelIndex===LEVELS.length-1?'won':'cleared';this.emit(this.status);}
+      if(this.enemies.every(e=>e.hp<=0)){this.timeBonus=Math.max(100,Math.floor(1200-this.levelTime*5));this.score+=this.timeBonus;this.status=this.levelIndex===LEVELS.length-1?'won':'cleared';this.emit(this.status);}
       else if(this.exitHint<=0){this.emit('locked');this.exitHint=4;}
     }
   }

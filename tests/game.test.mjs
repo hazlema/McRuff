@@ -70,6 +70,17 @@ test('advancing through the three districts preserves score and ends in victory'
   assert.ok(g.score>=500);assert.equal(g.levelIndex,2);
 });
 
+test('the district report splits arrest points from bonus and resets each district', () => {
+  const g=new Game();const p=g.player,target=g.enemies[0];
+  g.enemies.forEach(e=>{if(e!==target)e.hp=0;});target.hp=1;p.x=target.x-1;p.y=target.y;p.angle=0;
+  assert.ok(g.bite());g.score+=500;g.levelTime=30;g.player.x=g.exit.x;g.player.y=g.exit.y;g.update(.01,{});
+  const r=g.districtReport();
+  assert.equal(g.status,'cleared');assert.equal(r.score,100);assert.equal(r.timeBonus,Math.max(100,Math.floor(1200-30.01*5)));assert.equal(r.bonus,500+r.timeBonus);
+  assert.equal(r.arrestsBefore,0);assert.equal(r.arrests,1);assert.equal(r.suspects,LEVELS.reduce((n,l)=>n+l.enemies.length,0));assert.equal(r.caseScore,g.score);
+  g.nextLevel();const next=g.districtReport();
+  assert.equal(next.score,0);assert.equal(next.bonus,0);assert.equal(next.arrestsBefore,1);assert.equal(next.caseScore,g.score);
+});
+
 test('holding bite while a suspect approaches makes an arrest', () => {
   const g=new Game();
   for(let frame=0;frame<360&&g.status==='playing';frame++)g.update(1/60,{bite:true});

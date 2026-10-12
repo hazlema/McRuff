@@ -44,3 +44,33 @@
 @media(pointer:coarse){.cat-tracker{bottom:255px}}
 @media(max-height:530px){.cat-tracker{bottom:140px}.cat-tracker-title,.cat-tracker small{display:none}}
 @media(max-width:380px){.game-bottom{gap:8px;padding-inline:10px}}
+
+/* Doom-style district intermission. Stats sit on the art's stone panel, so everything scales in cqw. */
+.intermission{position:absolute;inset:0;z-index:25;display:grid;place-items:center;overflow:hidden;background:#070303;outline:none}
+.intermission::before{content:'';position:absolute;inset:-40px;background:url('assets/intermission.jpg') center/cover;filter:blur(18px) brightness(.45)}
+.intermission::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 110%,#ff4a1424,transparent 60%);animation:hellglow 2.6s ease-in-out infinite alternate}
+.intermission-frame{position:relative;z-index:1;width:min(100vw,177.7dvh);aspect-ratio:1672/941;background:url('assets/intermission.jpg') center/100% 100% no-repeat;container-type:inline-size;box-shadow:0 0 80px #000}
+
+.tally{position:absolute;left:27.5%;right:27.5%;top:36%;margin:0}
+.tally-row{display:flex;justify-content:space-between;align-items:center;height:5.35cqw;font:4.55cqw/1 var(--display);letter-spacing:.12cqw;opacity:0;--hi:#ffe46b;--lo:#f29a00}
+.tally-row[data-stat=score]{--hi:#a6ff7a;--lo:#13b61e}
+.tally-row[data-stat=arrests]{--hi:#7fd0ff;--lo:#1559ec}
+.tally-row[data-stat=bonus]{--hi:#f7a6ff;--lo:#a414dc}
+.tally-row dt,.tally-row dd{margin:0;padding:0 .2cqw;background:linear-gradient(180deg,var(--hi) 18%,var(--lo) 82%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:.13cqw #160903;filter:drop-shadow(0 .3cqw 0 #000) drop-shadow(0 0 .7cqw #000d)}
+.tally-row dd{font-variant-numeric:tabular-nums}
+.tally-row.shown{opacity:1;animation:tallyslam .22s cubic-bezier(.2,1.6,.4,1)}
+.intermission-footer{position:absolute;left:27.5%;right:27.5%;top:76.4%;display:flex;align-items:center;gap:1.1cqw}
+.intermission-title{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.case-total{margin-right:auto;font:bold 1.05cqw var(--mono);letter-spacing:.12cqw;text-transform:uppercase;color:#d9c08e;text-shadow:0 .1cqw 0 #000,0 0 .4cqw #000}
+.case-total b{display:flex;align-items:baseline;gap:.7cqw;font:2.1cqw var(--display);letter-spacing:.2cqw;color:#efdcb0;margin-top:.35cqw}
+.case-total small{font:bold .9cqw var(--mono);letter-spacing:.12cqw;color:#b9a47b}
+.intermission-button{white-space:nowrap;padding:.8cqw 1.3cqw;font:1.05cqw var(--mono);letter-spacing:.1cqw;text-transform:uppercase;color:#e6d6b0;background:linear-gradient(#3a2b22,#1c130f);border:.12cqw solid #8a6d4c;box-shadow:0 .25cqw 0 #000,inset 0 .1cqw 0 #ffffff1c;transition:opacity .2s}
+.intermission-button.primary{background:linear-gradient(#b8361d,#6f1a0c);border-color:#f08a4a;color:#fff0cf}
+.intermission-button kbd{margin-left:.6cqw;padding:.15cqw .4cqw;font:.85cqw var(--mono);border:.1cqw solid #ffd9b377}
+.intermission-button:disabled{opacity:0;pointer-events:none}
+.intermission.ready .intermission-button.primary{animation:readyblink 1s steps(2,jump-none) infinite}
+@keyframes tallyslam{from{transform:scale(1.25);opacity:0}to{transform:none;opacity:1}}
+@keyframes hellglow{from{opacity:.55}to{opacity:1}}
+@keyframes readyblink{50%{box-shadow:0 .25cqw 0 #000,0 0 1.4cqw #ff5a1f}}
+@media(pointer:coarse){.intermission-button{padding:1.1cqw 1.6cqw;font-size:1.3cqw}}
+#intermission-district{display:block;white-space:nowrap}
