@@ -30,7 +30,22 @@ async (page)=>{
     const level=await p.evaluate(()=>window.__intermissionQA.game.levelIndex);
     assert(level===1,`expected district 2, got index ${level}`);
     assert(await p.locator('#intermission').isHidden(),'intermission still visible');
+    // Dying mid-bite used to restart the case the moment Space was released.
+    await p.keyboard.down('Space');
+    await p.evaluate(()=>{const g=window.__intermissionQA.game;g.invulnerable=0;g.damage(1000);});
+    await p.waitForFunction(()=>window.__intermissionQA.mode==='intermission');
+    await p.keyboard.up('Space');
+    for(let i=0;i<6;i++){await p.keyboard.press('Space');await p.waitForTimeout(60);}
+    assert(await mode()==='intermission','Space released or mashed skipped the death screen');
+    assert(await p.locator('#intermission').getAttribute('data-art')==='down','death screen art not used');
+    await p.waitForFunction(()=>!document.querySelector('#intermission-next').disabled,null,{timeout:6000});
+    const deathRows=await p.locator('.tally-row dt').allTextContents();
+    assert(deathRows.join()==='Time,Score,Arrests,Bones',`death rows: ${deathRows}`);
+    assert(await p.locator('#intermission-next-label').textContent()==='Try again','wrong death action');
+    await p.keyboard.press('Space');
+    await p.waitForFunction(()=>window.__intermissionQA.mode==='playing');
+    assert(await p.evaluate(()=>window.__intermissionQA.game.levelIndex===1&&window.__intermissionQA.game.player.health===100),'try again did not replay the district');
     assert(!errors.length,errors.join('\n'));
-    return {ok:true,rows};
+    return {ok:true,rows,deathRows};
   }finally{await ctx.close();}
 }

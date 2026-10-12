@@ -81,6 +81,18 @@ test('the district report splits arrest points from bonus and resets each distri
   assert.equal(next.score,0);assert.equal(next.bonus,0);assert.equal(next.arrestsBefore,1);assert.equal(next.caseScore,g.score);
 });
 
+test('dying replays the same district from its starting case totals', () => {
+  const g=new Game();g.enemies.forEach(e=>e.hp=0);g.player.x=g.exit.x;g.player.y=g.exit.y;g.update(.01,{});g.nextLevel();
+  const start={score:g.score,arrests:g.totalArrests,bones:g.bones,elapsed:g.elapsed};
+  g.score+=900;g.totalArrests+=2;g.bones++;g.catPoints+=250;g.catCollection.tabby++;g.update(1,{});g.player.armor=40;
+  g.invulnerable=0;g.damage(1000);assert.equal(g.status,'dead');
+  g.retryLevel();
+  assert.equal(g.status,'playing');assert.equal(g.levelIndex,1);assert.equal(g.level,LEVELS[1]);
+  assert.equal(g.score,start.score);assert.equal(g.totalArrests,start.arrests);assert.equal(g.bones,start.bones);assert.equal(g.elapsed,start.elapsed);
+  assert.equal(g.catPoints,0);assert.equal(g.catCollection.tabby,0);assert.equal(g.player.health,100);assert.equal(g.player.armor,0);
+  assert.ok(g.enemies.every(e=>e.hp>0));assert.equal(g.arrests,0);
+});
+
 test('holding bite while a suspect approaches makes an arrest', () => {
   const g=new Game();
   for(let frame=0;frame<360&&g.status==='playing';frame++)g.update(1/60,{bite:true});

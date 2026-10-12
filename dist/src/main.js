@@ -10,7 +10,7 @@ const defaults={difficulty:'normal',sensitivity:1,muted:false,reducedMotion:matc
 let stored={};try{stored=JSON.parse(localStorage.getItem('mcruff-options')||'{}')||{};}catch{}
 const options={...defaults,...stored};if(!['easy','normal','hard'].includes(options.difficulty))options.difficulty='normal';options.sensitivity=Math.min(2.5,Math.max(.4,Number(options.sensitivity)||1));
 options.bindings=normalizeBindings(stored.bindings);
-let game=null,mode='title',overlayBack='title',keys=new Set(),mouseDown=false,lastTime=0,toastUntil=0,dispatchUntil=0,lastFootstep=0,locked=false,best=0;
+let game=null,mode='title',overlayBack='title',keys=new Set(),mouseDown=false,middleDown=false,lastTouchAt=-1e9,lastTime=0,toastUntil=0,dispatchUntil=0,lastFootstep=0,locked=false,best=0;
 let captureAction=null,bindingReturn='settings',tally=null;
 let touchMove={x:0,y:0},lookTouch=null,joystickTouch=null,joystickOrigin=null;
 try{best=Number(localStorage.getItem('mcruff-best'))||0;}catch{}
@@ -27,7 +27,7 @@ function updateBindingHints(){
   $('map-close-key').textContent=`${bindingLabel('map')} TO CLOSE`;$('map-button').title=`Scent map (${bindingLabel('map')})`;
   surface.setAttribute('aria-label',`First-person view of New Bark City. ${bindingLabel('forward')}/${bindingLabel('backward')} move, ${bindingLabel('strafeLeft')}/${bindingLabel('strafeRight')} strafe, ${bindingLabel('lookLeft')}/${bindingLabel('lookRight')} turn, ${bindingLabel('bite')} bites, ${bindingLabel('bark')} barks. Escape pauses.`);
 }
-function clearInput(){keys.clear();mouseDown=false;touchMove={x:0,y:0};joystickTouch=null;lookTouch=null;$('joystick-knob').style.transform='';}
+function clearInput(){keys.clear();mouseDown=false;middleDown=false;touchMove={x:0,y:0};joystickTouch=null;lookTouch=null;$('joystick-knob').style.transform='';}
 function unlock(){if(document.pointerLockElement)document.exitPointerLock();}
 function lock(){
   if(matchMedia('(pointer:coarse)').matches)return;
@@ -36,7 +36,7 @@ function lock(){
 }
 function syncBest(){if(best>0)$('best-score').textContent=`BEST: ${String(best).padStart(6,'0')}`;}
 function start(){
-  clearInput();game=new Game(options.difficulty);mode='playing';lastFootstep=0;$('title-screen').classList.add('hidden');$('game-screen').classList.remove('hidden');$('overlay').classList.add('hidden');$('intermission').classList.add('hidden');$('map-panel').classList.add('hidden');$('combo').textContent='';audio.init();audio.playing=true;surface.focus({preventScroll:true});lock();refreshLevel();toast('YOU ARE BUSTER. BITE THE CRIME.',3.5);
+  clearInput();tally=null;game=new Game(options.difficulty);mode='playing';lastFootstep=0;$('title-screen').classList.add('hidden');$('game-screen').classList.remove('hidden');$('overlay').classList.add('hidden');$('intermission').classList.add('hidden');$('map-panel').classList.add('hidden');$('combo').textContent='';audio.init();audio.playing=true;surface.focus({preventScroll:true});lock();refreshLevel();toast('YOU ARE BUSTER. BITE THE CRIME.',3.5);
 }
 function refreshLevel(){
   $('district-number').textContent=`DISTRICT ${game.level.district}`;$('district-name').textContent=game.level.name;$('suspect-count').textContent=game.enemies.length;
@@ -46,7 +46,8 @@ function showOverlay(kicker,title,copy,content,actions){
   clearInput();captureAction=null;unlock();audio.playing=false;
   document.querySelector('.overlay-panel').classList.toggle('bindings-panel',mode==='bindings');
   document.querySelector('.overlay-panel').classList.toggle('collection-panel',mode==='collection');
-  $('overlay-kicker').textContent=kicker;$('overlay-title').textContent=title;$('overlay-copy').textContent=copy;$('overlay-content').innerHTML=content;$('overlay-actions').replaceChildren();
+  document.querySelector('.overlay-panel').classList.toggle('menu-panel',mode==='paused');
+  $('overlay-kicker').textContent=kicker;$('overlay-title').textContent=title.replace(/\.$/,'');document.querySelector('.overlay-body').scrollTop=0;$('overlay-copy').textContent=copy;$('overlay-content').innerHTML=content;$('overlay-actions').replaceChildren();
   actions.forEach(({label,action,primary})=>{const b=document.createElement('button');b.textContent=label;b.className=`action-button${primary?' primary':''}`;b.addEventListener('click',()=>{audio.play('click');action();});$('overlay-actions').append(b);});
   $('overlay').classList.remove('hidden');$('overlay-actions').querySelector('button')?.focus({preventScroll:true});
 }
@@ -58,7 +59,7 @@ function resume(){if(!game||game.status!=='playing')return;mode='playing';$('ove
 function menu(){mode='title';tally=null;clearInput();unlock();audio.playing=false;$('overlay').classList.add('hidden');$('intermission').classList.add('hidden');$('game-screen').classList.add('hidden');$('title-screen').classList.remove('hidden');syncBest();$('start-button').focus({preventScroll:true});}
 function closeInfo(){if(overlayBack==='paused')pauseMenu();else{mode='title';$('overlay').classList.add('hidden');$('start-button').focus({preventScroll:true});}}
 function controls(){overlayBack='title';mode='controls';showOverlay('FIELD MANUAL','Good cop. Bad bite.','Clear every suspect, then find the green extraction beacon. Your map shows the way.',
-  `<div class="control-list">${ACTIONS.map(a=>`<div>${a.label}<kbd>${bindingLabel(a.id)}</kbd></div>`).join('')}</div><p class="tip">Mouse look, left-click bite, and right-click bark also work. Escape always pauses. Change your keys in Options → Key bindings.<br><br>Get close to bite. A raised newspaper means a swat is coming: backstep or press ${bindingLabel('bark')} to interrupt it. Bites only interrupt a raised paper on Easy. Bark also knocks bottles out of the air. Steak restores 35 health. On Normal and Hard, arrests give no healing and health carries between districts with a small patch-up. Find two golden bones in each district for bonus points.<br><br>CAT PATROL: Bark near a sealed oil drum or wooden crate to hear it rattle. Bite it to launch 1–4 cats! Chase them and use your bite for a gentle grab at close range. Barking makes cats meow and bolt; it never stuns them. Rarer coats earn bigger bonuses. Check Cat collection while paused. This side game is optional. Bark at a garbage can for a grumpy surprise.<br><br>On touchscreens: left stick to move, drag the right half to look, tap BITE or BARK.</p>`,
+  `<div class="control-list">${ACTIONS.map(a=>`<div>${a.label}<kbd>${bindingLabel(a.id)}</kbd></div>`).join('')}</div><p class="tip">Mouse look, left-click bite, right-click bark, and hold middle-click to move forward also work. Escape always pauses. Change your keys in Options → Key bindings.<br><br>Get close to bite. A raised newspaper means a swat is coming: backstep or press ${bindingLabel('bark')} to interrupt it. Bites only interrupt a raised paper on Easy. Bark also knocks bottles out of the air. Steak restores 35 health. On Normal and Hard, arrests give no healing and health carries between districts with a small patch-up. Find two golden bones in each district for bonus points.<br><br>CAT PATROL: Bark near a sealed oil drum or wooden crate to hear it rattle. Bite it to launch 1–4 cats! Chase them and use your bite for a gentle grab at close range. Barking makes cats meow and bolt; it never stuns them. Rarer coats earn bigger bonuses. Check Cat collection while paused. This side game is optional. Bark at a garbage can for a grumpy surprise.<br><br>On touchscreens: left stick to move, drag the right half to look, tap BITE or BARK.</p>`,
   [{label:'Got it',action:closeInfo,primary:true}]);}
 function catCollection(){
   overlayBack='paused';mode='collection';
@@ -70,7 +71,7 @@ function catCollection(){
 }
 function settings(back='title'){
   overlayBack=back;mode='settings';showOverlay('PRECINCT PREFERENCES','Your kind of ruff.','Easy forgives. Normal fights back. Hard means it. Difficulty applies to your next case.',
-    `<label class="option-row">Difficulty<select id="difficulty"><option value="easy">Good boy · Easy</option><option value="normal">Street dog · Normal</option><option value="hard">Unleashed · Hard</option></select></label><label class="option-row">Look sensitivity<input id="sensitivity" aria-label="Look sensitivity" type="range" min="0.4" max="2.5" step="0.1"></label><label class="option-row">Sound & music<input id="sound-enabled" type="checkbox"></label><label class="option-row">Reduce screen motion<input id="reduce-motion" type="checkbox"></label>`,
+    `<label class="option-row"><span>Difficulty</span><select id="difficulty"><option value="easy">Good boy · Easy</option><option value="normal">Street dog · Normal</option><option value="hard">Unleashed · Hard</option></select></label><label class="option-row"><span>Look sensitivity</span><input id="sensitivity" aria-label="Look sensitivity" type="range" min="0.4" max="2.5" step="0.1"></label><label class="option-row"><span>Sound & music</span><input id="sound-enabled" type="checkbox"></label><label class="option-row"><span>Reduce screen motion</span><input id="reduce-motion" type="checkbox"></label>`,
     [{label:'Key bindings',action:()=>keyBindings(back)},{label:'Done',action:closeInfo,primary:true}]);
   $('difficulty').value=options.difficulty;$('sensitivity').value=options.sensitivity;$('sound-enabled').checked=!options.muted;$('reduce-motion').checked=options.reducedMotion;
   $('difficulty').onchange=e=>{options.difficulty=e.target.value;saveOptions();};$('sensitivity').oninput=e=>{options.sensitivity=Number(e.target.value);saveOptions();};$('sound-enabled').onchange=e=>{options.muted=!e.target.checked;saveOptions();audio.init();};$('reduce-motion').onchange=e=>{options.reducedMotion=e.target.checked;saveOptions();};
@@ -113,22 +114,27 @@ function captureBinding(event){
 function finish(){
   if(mode!=='playing')return;mode='result';
   if(game.score>best){best=game.score;try{localStorage.setItem('mcruff-best',String(best));}catch{}}
-  const stats=`<div class="result-stats"><div><b>${String(game.score).padStart(6,'0')}</b><span>CASE SCORE</span></div><div><b>${game.totalArrests}</b><span>ARRESTS</span></div><div><b>${game.bones} / 6</b><span>GOLDEN BONES</span></div><div><b>${formatTime(game.elapsed)}</b><span>ON THE BEAT</span></div></div><div class="cat-results"><b>${game.catsCaptured} CATS CAPTURED</b><span>+${game.catPoints.toLocaleString()} BONUS · ${game.catCollection.lilac+game.catCollection.golden} RARE / LEGENDARY</span></div>`;
-  if(game.status==='cleared')intermission();
-  else if(game.status==='won')showOverlay('CASE CLOSED · CITY SAVED','Who’s a good cop?','You are. Big Lou is behind bars, the treats are back, and New Bark City can sleep with both ears down.',stats+'<p class="tip">OFFICER BUSTER McRUFF · AWARDED THE GOLDEN BISCUIT<br>“He’s a loose cannon, but he gets fetch results.” — The Chief</p>',[{label:'Walk the beat again',action:start,primary:true},{label:'Main menu',action:menu}]);
-  else showOverlay('OFFICER DOWN','A ruff day.','Backstep from raised newspapers, break up the gang with a bark, and grab a steak before the next fight.',stats,[{label:'Try again',action:start,primary:true},{label:'Main menu',action:menu}]);
+  intermission(game.status);
 }
-// District intermission: stats count up one at a time, Doom style. Input is ignored briefly and
-// continuing needs a fresh press after the tally, so a held or mashed bite key can't skip it.
-function intermission(){
+// End screens: stats count up one at a time, Doom style. Input is ignored briefly and continuing
+// needs a fresh press after the tally, so a held or mashed bite key can't skip past the results.
+const ENDINGS={
+  cleared:{art:'complete',next:'Next district',caption:()=>game.level.name},
+  won:{art:'complete',next:'Walk the beat again',caption:()=>'Big Lou collared · City saved'},
+  dead:{art:'down',next:'Try again',caption:()=>`Down in ${game.level.name.replace(/^The /,'the ')}`},
+};
+function intermission(kind){
   mode='intermission';clearInput();captureAction=null;unlock();audio.playing=false;
-  const r=game.districtReport(),fmt=n=>n.toLocaleString();
-  $('intermission-district').textContent=`District ${game.level.district} · ${game.level.name}`;
+  const r=game.districtReport(),ending=ENDINGS[kind],fmt=n=>n.toLocaleString(),district=kind==='cleared';
+  $('intermission').dataset.art=ending.art;$('intermission-title').textContent=kind==='dead'?'Officer down':kind==='won'?'Case closed':'District complete';
+  $('intermission-district').textContent=ending.caption();$('intermission-next-label').textContent=ending.next;
   $('case-total').textContent=String(r.caseScore).padStart(6,'0');$('intermission-key').textContent=bindingLabel('bite');
-  const stats=[['time',0,Math.floor(r.time),formatTime],['score',0,r.score,fmt],['arrests',r.arrestsBefore,r.arrests,n=>`${n} / ${r.suspects}`],['bonus',0,r.bonus,n=>`+${fmt(n)}`]];
-  const now=performance.now();
-  tally={rows:stats.map(([stat,from,to,format])=>({el:document.querySelector(`.tally-row[data-stat=${stat}]`),from,to,format})),index:0,rowStart:now+600,lastTick:0,shownAt:now,readyAt:Infinity,ready:false};
-  for(const row of tally.rows){row.el.classList.remove('shown');row.el.querySelector('dd').textContent=row.format(row.from);}
+  // A district shows what was earned there; a finished case (won or lost) shows the whole run.
+  const stats=district?[['Time',0,Math.floor(r.time),formatTime],['Score',0,r.score,fmt],['Arrests',r.arrestsBefore,r.arrests,n=>`${n} / ${r.suspects}`],['Bonus',0,r.bonus,n=>`+${fmt(n)}`]]
+    :[['Time',0,Math.floor(game.elapsed),formatTime],['Score',0,r.caseScore,fmt],['Arrests',0,r.arrests,n=>`${n} / ${r.suspects}`],['Bones',0,game.bones,n=>`${n} / 6`]];
+  const now=performance.now(),rows=[...document.querySelectorAll('.tally-row')];
+  tally={kind,rows:stats.map(([label,from,to,format],i)=>({el:rows[i],label,from,to,format})),index:0,rowStart:now+600,lastTick:0,shownAt:now,readyAt:Infinity,ready:false};
+  for(const row of tally.rows){row.el.classList.remove('shown');row.el.querySelector('dt').textContent=row.label;row.el.querySelector('dd').textContent=row.format(row.from);}
   for(const id of ['intermission-next','intermission-menu'])$(id).disabled=true;
   $('intermission').classList.remove('ready','hidden');$('intermission').focus({preventScroll:true});
 }
@@ -150,9 +156,11 @@ function skipTally(now){
   for(const row of tally.rows){row.el.classList.add('shown');row.el.querySelector('dd').textContent=row.format(row.to);}
   tally.index=tally.rows.length;tally.readyAt=Math.max(now+700,tally.shownAt+2500);audio.play('tallyHit');
 }
-function nextDistrict(){
-  if(!tally?.ready)return;tally=null;audio.play('click');
-  game.nextLevel();refreshLevel();mode='playing';clearInput();$('intermission').classList.add('hidden');audio.init();audio.playing=true;lastFootstep=0;surface.focus({preventScroll:true});lock();
+function proceed(){
+  if(!tally?.ready)return;const kind=tally.kind;tally=null;audio.play('click');
+  if(kind==='won'){start();return;}
+  if(kind==='dead')game.retryLevel();else game.nextLevel();
+  refreshLevel();mode='playing';clearInput();$('intermission').classList.add('hidden');audio.init();audio.playing=true;lastFootstep=0;surface.focus({preventScroll:true});lock();
 }
 function formatTime(seconds){return `${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;}
 function updateHud(){
@@ -183,7 +191,7 @@ function frame(now){
   if(game){
     if(mode==='playing'){
       const input=keyboardInput(options.bindings,keys);
-      input.forward-=touchMove.y;input.strafe+=touchMove.x;input.bite||=mouseDown;
+      input.forward=Math.max(-1,Math.min(1,input.forward+(middleDown?1:0)))-touchMove.y;input.strafe+=touchMove.x;input.bite||=mouseDown;
       game.update(dt,input);events(now);
       if(game.distanceWalked-lastFootstep>.9){audio.play('step');lastFootstep=game.distanceWalked;}
       if(game.comboTimer<=0)$('combo').textContent='';
@@ -199,7 +207,7 @@ function toggleMap(){$('map-panel').classList.toggle('hidden');}
 async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{if(mode==='playing')toast('FULLSCREEN UNAVAILABLE IN THIS VIEW',3);}}
 $('start-button').onclick=start;$('controls-button').onclick=controls;$('settings-button').onclick=()=>settings('title');$('pause-button').onclick=pause;$('fullscreen-title').onclick=fullscreen;
 $('map-button')?.addEventListener('click',toggleMap);
-$('intermission-next').onclick=nextDistrict;$('intermission-menu').onclick=()=>{if(tally?.ready){audio.play('click');menu();}};
+$('intermission-next').onclick=proceed;$('intermission-menu').onclick=()=>{if(tally?.ready){audio.play('click');menu();}};
 $('intermission').addEventListener('pointerdown',e=>{if(!e.target.closest('button'))skipTally(performance.now());});
 $('cat-tracker').onclick=()=>{if(mode==='playing')catCollection();};
 document.querySelector('.precinct-mark').onclick=e=>e.preventDefault();
@@ -211,7 +219,7 @@ document.addEventListener('keydown',e=>{
     const confirm=e.code==='Space'||e.code==='Enter'||e.code===options.bindings.bite;
     if(e.code==='Tab'){e.preventDefault();if(tally?.ready)(document.activeElement===$('intermission-next')?$('intermission-menu'):$('intermission-next')).focus();return;}
     if(!confirm||e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();if(e.repeat||!tally)return;
-    if(!tally.ready)skipTally(performance.now());else if(document.activeElement===$('intermission-menu'))$('intermission-menu').click();else nextDistrict();
+    if(!tally.ready)skipTally(performance.now());else if(document.activeElement===$('intermission-menu'))$('intermission-menu').click();else proceed();
     return;
   }
   if(e.code==='Tab'&&!$('overlay').classList.contains('hidden')){const elements=[...$('overlay').querySelectorAll('button,input,select')];const first=elements[0],last=elements.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}return;}
@@ -222,16 +230,27 @@ document.addEventListener('keydown',e=>{
   if(mode==='title'&&e.code==='Enter'&&document.activeElement?.tagName!=='BUTTON'){e.preventDefault();start();return;}
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   const action=actionForKey(options.bindings,e.code);
+  // The pause menu is a vertical list: arrows (or move keys) step through it, Doom style.
+  const step=e.code==='ArrowUp'||action==='forward'?-1:e.code==='ArrowDown'||action==='backward'?1:0;
+  if(mode==='paused'&&step){
+    e.preventDefault();const items=[...$('overlay-actions').querySelectorAll('button')],at=items.indexOf(document.activeElement);
+    items[(at+step+items.length)%items.length].focus();audio.play('tally');return;
+  }
   if(mode==='paused'&&action==='pause'){e.preventDefault();if(!e.repeat)resume();return;}
   if(mode!=='playing')return;
   if(!action)return;e.preventDefault();keys.add(e.code);if(e.repeat)return;
   if(action==='bite')game.bite();if(action==='bark')game.bark();if(action==='map')toggleMap();if(action==='fullscreen')fullscreen();if(action==='pause')pause();
 });
 document.addEventListener('keyup',e=>{keys.delete(e.code);if(mode==='intermission'&&(e.code==='Space'||e.code==='Enter'))e.preventDefault();});
-surface.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='touch'||mode!=='playing')return;if(e.button===0){mouseDown=true;game.bite();audio.init();if(document.pointerLockElement!==surface)lock();}else if(e.button===2){e.preventDefault();game.bark();}
+// Mouse buttons use mouse events: pointer events report a second held button only as a move,
+// so holding middle (walk forward) and then clicking left (bite) would never register.
+surface.addEventListener('mousedown',e=>{
+  if(mode!=='playing'||performance.now()-lastTouchAt<1000)return;
+  if(e.button===0){mouseDown=true;game.bite();audio.init();if(document.pointerLockElement!==surface)lock();}
+  else if(e.button===1){e.preventDefault();middleDown=true;}else if(e.button===2){e.preventDefault();game.bark();}
 });
-document.addEventListener('pointerup',e=>{if(e.pointerType!=='touch')mouseDown=false;});
+document.addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;else if(e.button===1)middleDown=false;});
+surface.addEventListener('auxclick',e=>e.preventDefault());
 surface.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('mousemove',e=>{if(mode==='playing'&&document.pointerLockElement===surface)game.player.angle+=e.movementX*.0028*options.sensitivity;});
 document.addEventListener('pointerlockchange',()=>{const wasLocked=locked;locked=document.pointerLockElement===surface;if(wasLocked&&!locked&&mode==='playing')pause();});
@@ -241,7 +260,7 @@ const joystick=$('joystick');joystick.addEventListener('pointerdown',e=>{if(mode
 joystick.addEventListener('pointermove',e=>{if(e.pointerId!==joystickTouch)return;const dx=e.clientX-joystickOrigin.x,dy=e.clientY-joystickOrigin.y,d=Math.max(35,Math.hypot(dx,dy));touchMove={x:dx/d,y:dy/d};$('joystick-knob').style.transform=`translate(${touchMove.x*30}px,${touchMove.y*30}px)`;});
 function releaseJoystick(){joystickTouch=null;touchMove={x:0,y:0};$('joystick-knob').style.transform='';}
 joystick.addEventListener('pointerup',releaseJoystick);joystick.addEventListener('pointercancel',releaseJoystick);
-surface.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&mode==='playing'){lookTouch={id:e.pointerId,x:e.clientX};surface.setPointerCapture(e.pointerId);}});
+surface.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')lastTouchAt=performance.now();if(e.pointerType==='touch'&&mode==='playing'){lookTouch={id:e.pointerId,x:e.clientX};surface.setPointerCapture(e.pointerId);}});
 surface.addEventListener('pointermove',e=>{if(lookTouch?.id===e.pointerId&&mode==='playing'){game.player.angle+=(e.clientX-lookTouch.x)*.006*options.sensitivity;lookTouch.x=e.clientX;}});
 surface.addEventListener('pointerup',e=>{if(lookTouch?.id===e.pointerId)lookTouch=null;});surface.addEventListener('pointercancel',()=>lookTouch=null);
 $('touch-bite').addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='playing'){mouseDown=true;game.bite();$('touch-bite').setPointerCapture(e.pointerId);}});for(const name of ['pointerup','pointercancel'])$('touch-bite').addEventListener(name,()=>mouseDown=false);

@@ -22,7 +22,7 @@ For Netlify, the included `netlify.toml` publishes `dist/` directly with no buil
 
 | Action | Control |
 |---|---|
-| Move forward/backward | W/S, or up/down arrows |
+| Move forward/backward | W/S, or up/down arrows; hold the middle mouse button to move forward |
 | Look left/right | A/D, mouse, or left/right arrows |
 | Strafe left/right | Q/E |
 | Bite and lunge | Left mouse button or Space; hold to keep biting |

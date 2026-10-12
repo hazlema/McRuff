@@ -21,13 +21,20 @@ export class Game {
     this.enemies=level.enemies.map((e,i)=>({...e,hp:enemyStats[e.type].hp,maxHp:enemyStats[e.type].hp,active:false,cooldown:.6+i*.13,stun:0,hurt:0,dead:0,phase:i*1.7,attackWindup:0,attackSwing:0}));
     this.pickups=level.pickups.map(p=>({...p,collected:false}));this.props=level.props.map(p=>({...p,opened:false,shake:0,peek:0,peekProgress:0,grouchBarks:0,grouchDead:false,grouchFlop:0,grouchThrow:0,throwPose:0}));this.cats=[];this.exit=level.exit;
     this.arrests=0;this.status='playing';this.biteCooldown=0;this.biteAnimation=0;this.barkCooldown=0;this.barkWave=0;this.hurt=0;this.paperImpact=0;this.invulnerable=0;this.projectiles=[];this.particles=[];this.distanceWalked=0;this.fieldTimer=0;this.field=null;this.levelTime=0;this.exitHint=0;
-    this.levelStart={score:this.score,arrests:this.totalArrests};this.arrestPoints=0;this.timeBonus=0;
+    this.levelStart={score:this.score,arrests:this.totalArrests,bones:this.bones,elapsed:this.elapsed,catsCaptured:this.catsCaptured,catPoints:this.catPoints,catsReleased:this.catsReleased,catCollection:{...this.catCollection}};this.arrestPoints=0;this.timeBonus=0;
     this.events.push({type:'dispatch',text:level.briefing});
   }
   // End-of-district tally: arrest points, plus everything else earned here as bonus.
   districtReport(){
     const earned=this.score-this.levelStart.score;
     return {time:this.levelTime,score:this.arrestPoints,bonus:earned-this.arrestPoints,timeBonus:this.timeBonus,arrestsBefore:this.levelStart.arrests,arrests:this.totalArrests,suspects:LEVELS.reduce((n,l)=>n+l.enemies.length,0),caseScore:this.score};
+  }
+  // After a death, replay the same district from the case totals it began with, at full health.
+  retryLevel(){
+    if(this.status!=='dead')return;
+    const {score,arrests,bones,elapsed,catsCaptured,catPoints,catsReleased,catCollection}=this.levelStart;
+    Object.assign(this,{score,totalArrests:arrests,bones,elapsed,catsCaptured,catPoints,catsReleased,catCollection:{...catCollection},combo:0,comboTimer:0,events:[],player:null});
+    this.loadLevel(this.levelIndex);
   }
   nextLevel(){if(this.status==='cleared'&&this.levelIndex<LEVELS.length-1)this.loadLevel(this.levelIndex+1);}
   emit(type,detail={}){this.events.push({type,...detail});}

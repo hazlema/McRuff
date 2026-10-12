@@ -36,8 +36,6 @@
 .cat-card h3{font:22px var(--display);margin:5px 0;color:#e8ddbf;letter-spacing:.5px}
 .cat-card p{font:9px var(--mono);color:#a3b2a6;margin:0}
 .cat-card>b{margin-left:auto;flex-shrink:0;font:28px var(--display);color:var(--cat-color)}
-.cat-results{padding:16px 0 0;display:grid;gap:6px;color:#d7b7f3;font:11px var(--mono)}
-.cat-results span{font-size:8px;color:#b4bba7}
 .cat-map-legend{justify-content:space-between;color:#dcaa72!important}
 .cat-map-legend>span:first-child{color:#d6b0ff}
 @media(max-width:700px){.cat-tracker{left:17px;bottom:94px;padding:8px 10px;font-size:8px;gap:4px}.cat-tracker b{font-size:16px}.cat-card{gap:10px;padding:9px}.cat-card canvas{width:60px;height:48px}.cat-card h3{font-size:19px}.cat-card p{font-size:8px}.cat-card>b{font-size:24px}.cat-rarity{font-size:7px;letter-spacing:.8px}.result-stats{flex-wrap:wrap}.result-stats>div{min-width:40%}}
@@ -73,4 +71,62 @@
 @keyframes hellglow{from{opacity:.55}to{opacity:1}}
 @keyframes readyblink{50%{box-shadow:0 .25cqw 0 #000,0 0 1.4cqw #ff5a1f}}
 @media(pointer:coarse){.intermission-button{padding:1.1cqw 1.6cqw;font-size:1.3cqw}}
-#intermission-district{display:block;white-space:nowrap}
+#intermission-district{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95cqw;letter-spacing:.02cqw}
+.case-total{min-width:0}.intermission-button{flex-shrink:0}
+
+/* Menus share the McRuff bone frame: the title sits in the iron plate, content scrolls on the stone. */
+#overlay{padding:0;background:#0a0403c4;backdrop-filter:blur(6px)}
+#overlay .overlay-panel{position:relative;width:min(100vw,179.2dvh);max-height:none;aspect-ratio:1672/933;padding:0;border:0;overflow:visible;background:url('assets/menu-frame.jpg') center/100% 100% no-repeat;box-shadow:0 0 90px #000;container-type:inline-size}
+#overlay #overlay-title{position:absolute;left:23%;right:23%;top:14.6%;height:14.2%;margin:0;display:grid;place-items:center;text-align:center;white-space:nowrap;text-transform:uppercase;font:4.3cqw/1 var(--display);letter-spacing:.15cqw;background:linear-gradient(180deg,#ffd27a 8%,#f0612a 45%,#a3150c 88%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:.14cqw #1d0603;filter:drop-shadow(0 .3cqw 0 #000) drop-shadow(0 0 .8cqw #000c)}
+.overlay-body{position:absolute;left:24.3%;right:24.3%;top:34.5%;bottom:15.8%;overflow-y:auto;overscroll-behavior:contain;padding:1.4cqw 1.2cqw 1cqw;scrollbar-width:thin;scrollbar-color:#8a6d4c transparent;text-shadow:0 1px 2px #000}
+#overlay .case-label{color:#e0b46a;text-align:center}
+#overlay .overlay-body>p{text-align:center;color:#d9cbb0;margin:12px auto 0;max-width:78%}
+#overlay .overlay-actions{justify-content:center}
+#overlay .action-button{flex:0 1 auto;min-width:150px;color:#e6d6b0;background:linear-gradient(#3a2b22,#1c130f);border:1px solid #8a6d4c;box-shadow:0 3px 0 #000,inset 0 1px 0 #ffffff1c;text-transform:uppercase;letter-spacing:1px}
+#overlay .action-button.primary{background:linear-gradient(#b8361d,#6f1a0c);border-color:#f08a4a;color:#fff0cf}
+#overlay .action-button:focus-visible{outline:2px solid #ffb35c;outline-offset:3px}
+#overlay .option-row{border-color:#8a6d4c40;color:#e2d5b8}
+#overlay .option-row select{background:#1a100b;border-color:#8a6d4c}
+#overlay .control-list{color:#d6c7a8}#overlay .control-list kbd{border-color:#8a6d4c;background:#1a100bb0}
+#overlay .binding-message{background:#1a100bd0;border-color:#e0b46a;color:#e8d8b6}
+#overlay .binding-row{background:#1a100bc4;border-color:#8a6d4c66;color:#e2d5b8}
+#overlay .binding-row kbd{border-color:#a88a63;background:#0e0806}
+#overlay .binding-row.listening,#overlay .binding-row.listening kbd{border-color:#f0612a}#overlay .binding-row.listening kbd{background:#b8361d}
+#overlay .bindings-panel .overlay-actions,#overlay .overlay-panel.bindings-panel .overlay-actions{position:static;background:none;margin:13px 0 0;padding:0}
+#overlay .cat-card{background:#1a100bc4}
+#overlay .tip{color:#d8b77c}
+@media(max-height:560px){#overlay .overlay-body{left:22.8%;right:22.8%;top:33.5%;bottom:14%;padding:6px}#overlay .action-button{min-width:0;padding:9px 12px;font-size:10px}#overlay .overlay-actions{margin-top:12px;gap:7px}#overlay .overlay-body>p{font-size:11px;line-height:1.5}}
+.intermission[data-art=down]::before,.intermission[data-art=down] .intermission-frame{background-image:url('assets/officer-down.jpg')}
+.intermission[data-art=down]::after{background:radial-gradient(ellipse at 50% 110%,#ff1a0a33,transparent 65%)}
+
+/* Pause menu: big colored menu items like the tally rows, with a pointer on the selection. */
+#overlay .menu-panel .overlay-body>p{display:none}
+#overlay .menu-panel .overlay-actions{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:0;width:max-content;margin:1.2cqw auto 0;padding-left:3.4cqw}
+#overlay .menu-panel .action-button,#overlay .menu-panel .action-button.primary{position:relative;text-shadow:none;min-width:0;padding:0 .3cqw;height:4.6cqw;border:0;box-shadow:none;background:linear-gradient(180deg,var(--hi) 18%,var(--lo) 82%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:.12cqw #160903;filter:drop-shadow(0 .28cqw 0 #000) drop-shadow(0 0 .6cqw #000d);font:3.7cqw/1 var(--display);letter-spacing:.12cqw;text-transform:none;--hi:#ffe46b;--lo:#f29a00;transition:transform .12s}
+#overlay .menu-panel .action-button:nth-child(2){--hi:#a6ff7a;--lo:#13b61e}
+#overlay .menu-panel .action-button:nth-child(3){--hi:#7fd0ff;--lo:#1559ec}
+#overlay .menu-panel .action-button:nth-child(4){--hi:#f7a6ff;--lo:#a414dc}
+#overlay .menu-panel .action-button:nth-child(5){--hi:#ffb27a;--lo:#c8200e}
+#overlay .menu-panel .action-button:is(:hover,:focus){transform:translateX(.6cqw);outline:0;filter:drop-shadow(0 .28cqw 0 #000) drop-shadow(0 0 1cqw #ff7a2a99)}
+#overlay .menu-panel .action-button:is(:hover,:focus)::before{content:'';position:absolute;left:-3cqw;top:50%;width:0;height:0;border-block:1.1cqw solid transparent;border-left:1.7cqw solid #e0361a;transform:translateY(-55%);filter:drop-shadow(0 .2cqw 0 #000)}
+@media(max-height:560px){#overlay .menu-panel .overlay-actions{margin-top:.6cqw}}
+
+/* Readability on the stone: dark backing plates, larger brighter text. */
+#overlay .menu-panel #overlay-kicker{display:none}
+#overlay .case-label{font-size:max(11px,.85cqw);letter-spacing:2px;color:#f3c779}
+#overlay .overlay-body>p{font-size:max(13px,1.05cqw);line-height:1.55;color:#f2e7cf;background:#0b0604b8;padding:.5cqw 1cqw;border-radius:3px}
+#overlay .option-row{padding:.35cqw 1.1cqw;margin-top:.4cqw;background:#0b0604c4;border:1px solid #8a6d4c55;border-radius:3px}
+#overlay .option-row>span{display:inline-block;text-shadow:none;font:2.1cqw/1.1 var(--display);letter-spacing:.08cqw;background:linear-gradient(180deg,var(--hi) 18%,var(--lo) 82%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:.07cqw #160903;filter:drop-shadow(0 .18cqw 0 #000);--hi:#ffe46b;--lo:#f29a00}
+#overlay .option-row:nth-child(2)>span{--hi:#a6ff7a;--lo:#13b61e}
+#overlay .option-row:nth-child(3)>span{--hi:#7fd0ff;--lo:#1559ec}
+#overlay .option-row:nth-child(4)>span{--hi:#f7a6ff;--lo:#a414dc}
+#overlay .option-row select{font-size:max(12px,.95cqw);color:#f2e7cf;padding:.45cqw .6cqw}
+#overlay .option-row input[type=range]{width:min(190px,14cqw);max-width:none}
+#overlay .option-row input[type=checkbox]{width:max(18px,1.4cqw);height:max(18px,1.4cqw)}
+#overlay .binding-message{font-size:max(12px,.95cqw);background:#0b0604d9}
+#overlay .binding-row{font-size:max(12px,.95cqw);color:#f2e7cf;background:#0b0604d4;border-color:#8a6d4c88}
+#overlay .binding-row kbd,#overlay .control-list kbd{font-size:max(11px,.85cqw);color:#ffe9b8}
+#overlay .control-list{font-size:max(12px,.95cqw);color:#f2e7cf;background:#0b0604c4;padding:1cqw;border-radius:3px}
+#overlay .tip{font-size:max(11px,.85cqw);color:#f0d29c;background:#0b0604c4;padding:.8cqw 1cqw;border-radius:3px}
+#overlay .cat-card{background:#0b0604d4}#overlay .cat-card p{color:#e2d5b8}
+@media(max-height:560px){#overlay .option-row>span{font-size:2.6cqw}#overlay .option-row{padding:4px 10px;margin-top:4px}}
